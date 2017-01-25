@@ -1,0 +1,191 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package mealordering;
+
+import java.sql.*;
+import java.util.Scanner;
+import javax.xml.transform.Result;
+/**
+ *
+ * @author bceyhan
+ */
+public class UniversityCourseSample {
+
+    Connection conn = null;
+
+    public static void main(String[] args) throws Exception {
+        UniversityCourseSample unv = new UniversityCourseSample();
+        unv.run();
+       Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+       String connectionURL ="jdbc:sqlserver://localhost:1433:databaseName=CEN234_PROJECT_QUERIES; user=UserGulcan; password=12345";
+       Connection con = DriverManager.getConnection(connectionURL);
+       
+       System.out.println("Your are connected to SQL Server");
+
+    }
+
+    /**
+     * Create connection here
+     *
+     * @throws Exception
+     */
+    public UniversityCourseSample() throws Exception {
+        System.out.println("JDBC Connect Example.");
+
+    }
+
+    private void run() throws Exception {
+        this.conn = null;
+        try {
+            conn = getConnection();
+            System.out.println("Connected to the database");
+
+            int choice = 0;
+            Scanner input = new Scanner(System.in);
+            do {
+                System.out.println("\nEnter choice, 0 to exit");
+                System.out.println("1- Find student with StudentNo. Show fullname and gpa");
+                System.out.println("2- List courses for given faculty");
+                System.out.println("3- Add course to a student by student Id and course code");
+                System.out.println("4- Update student gpa by studentNo");
+                System.out.println("5- Delete student from a given advisor ");
+                System.out.println("0- Exit");
+                choice = input.nextInt();
+
+                switch (choice) {
+                    case 1:
+                        System.out.println("Enter student No");
+                        String stId = input.next();
+                        findStudent(stId);
+                        break;
+                    case 2:
+                        System.out.println("Enter faculty");
+                        String facl = input.next();
+                        listCourses(facl);
+                        break;
+                    case 4:
+                        System.out.println("Enter student No");
+                        stId = input.next();
+                        System.out.println("Enter gpa");
+                        double gpa = input.nextDouble();
+                        updateStudentGpa(stId, gpa);
+                        break;
+                    case 0:
+                        System.out.println("bye");
+                        break;
+                    default:
+                        System.out.println("Must be one of 1,2,3");
+                }
+
+            } while (choice != 0);
+
+        } finally {
+            if (conn != null) {
+                conn.close();
+                System.out.println("Disconnected from database");
+            }
+        }
+    }
+
+    private void findStudent(String stuNo) throws SQLException {
+        PreparedStatement ps = null;
+        ResultSet result = null;
+        try {
+            ps = this.conn.prepareStatement(
+                    "SELECT studentNo, stuFirstname, stuLastname, stuGpa"
+                    + " FROM  student WHERE studentNo = ?");
+            ps.setString(1, stuNo);
+            result = ps.executeQuery();
+            if (result.next()) {
+                String fName = result.getString("StuFirstname"); //result.getString(2); 
+                String lName = result.getString("StuLastname"); //  result.getString(3); 
+                double gpa = result.getDouble("StuGpa"); //  result.getString(3); 
+                System.out.println("Student with ID : " + stuNo + " found");
+                System.out.println("Firstname : " + fName + ", lastname : " + lName + ",gpa : " + gpa);
+            } else {
+                System.out.println("Student with ID : " + stuNo + " NOT found");
+            }
+        } finally {
+            if (ps != null) {
+                ps.close();
+            }
+            if (result != null) {
+                result.close();
+            }
+        }
+    }
+
+    /**
+     * EX
+     *
+     * @param facName
+     * @throws SQLException
+     */
+    private void listCourses(String facName) throws SQLException {
+        PreparedStatement ps = null;
+        ResultSet result = null;
+        try {
+            ps = this.conn.prepareStatement(
+                    "SELECT crsCode, crsDesc " +
+                    " FROM course INNER JOIN department on course.deptName = department.deptName " +
+                    " WHERE facName = ?");
+            ps.setString(1, facName);
+            result = ps.executeQuery();
+            System.out.println("crsCode\tcrsDesc") ;
+            boolean fnd = false;
+            while (result.next()) {
+                fnd = true;
+                String crsCode = result.getString("crsCode"); //result.getString(2); 
+                String crsDesc = result.getString("crsDesc"); //  result.getString(3); 
+                System.out.println(crsCode + "\t" + crsDesc);
+            }
+            if(!fnd) {
+                System.out.println("(NO RECORDS FOUND)");
+            }
+        } finally {
+            if (ps != null) {
+                ps.close();
+            }
+            if (result != null) {
+                result.close();
+            }
+        }
+
+    }
+
+    private void updateStudentGpa(String stuNo, double gpa) throws SQLException {
+        PreparedStatement ps = null;
+
+        try {
+            ps = this.conn.prepareStatement(
+                    "UPDATE student SET stuGpa = ? WHERE studentNO = ?");
+
+            ps.setDouble(1, gpa);
+            ps.setString(2, stuNo);
+            int affected = ps.executeUpdate();
+            if (affected == 1) {
+                System.out.println("updated successfully");
+            } else {
+                System.out.println("update not successful. Possible: Student not found");
+            }
+        } finally {
+            if (ps != null) {
+                ps.close();
+            }
+        }
+    }
+
+    private static Connection getConnection() throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException {
+        Connection conn = null;
+        String url = "jdbc:sqlserver://localhost;database=IU234_CEN";
+        String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+        String userName = "sa";
+        String password = "Sql00server!";
+        Class.forName(driver).newInstance();
+        conn = DriverManager.getConnection(url, userName, password);
+        System.out.println("Connected to the database");
+        return conn;
+    }
+}
