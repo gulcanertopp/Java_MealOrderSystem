@@ -7,10 +7,7 @@ package mealordering;
 import java.sql.*;
 import java.util.Scanner;
 import javax.xml.transform.Result;
-/**
- *
- * @author bceyhan
- */
+
 public class UniversityCourseSample {
 
     Connection conn = null;
